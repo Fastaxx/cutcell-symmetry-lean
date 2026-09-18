@@ -1,0 +1,15 @@
+name = "lean-verif"
+version = "0.1.0"
+defaultTargets = ["lean-verif"]
+
+[[lean_lib]]
+name = "LeanVerif"
+
+[[lean_exe]]
+name = "lean-verif"
+root = "Main"
+
+[[require]]
+name = "mathlib"
+scope = "leanprover-community"
+rev = "v4.34.0"
