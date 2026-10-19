@@ -28,7 +28,7 @@ are the weighted sums (19). One phase is a structure `CutCell.Phase C F I`:
 | `X_λ` | `TwoPhase.InX` |
 | `Π^±_𝓜 r^±` | the source arguments `rm`, `rp` (cell means) |
 
-The moment formulas (21)–(23) and (26)–(28) are the definitions. Their derivation from the
+The moment formulas (21)–(23) and (25)–(27) are the definitions. Their derivation from the
 divergence theorem and Lemma 1 are geometric and are not formalized: Lemma 1 enters as the
 hypotheses of `Phase` (`uncut` is Lemma 1(c); `interior`, `dirichlet` say that a face with
 `A_σ ≠ 0` has one neighbour on each side unless it is a Dirichlet face, which has one;
@@ -40,23 +40,23 @@ positivity of `V, W, |Γ_K|` is Lemma 1(e) and the definition of the active sets
 |---|---|---|
 | (19) `L²` products | `Phase.innerM`, `Phase.innerΓ`, `Phase.innerE` | `Operators` |
 | (21)–(24) divergences, `div_𝓜`, `div_Γ` | `Phase.divω`, `divΓK`, `divK`, `divK_eq_add`, `divM`, `divΓ` | `Operators` |
-| (26)–(29) gradient | `Phase.gradω`, `gradΓ`, `grad` | `Operators` |
-| **Theorem 2**, (30) | `Phase.green_ω`, `Phase.green_Γ` | `Operators` |
-| **Theorem 2**, (31) | `Phase.green` | `Operators` |
-| (32) jumps | `Phase.jumps_grad`, `Phase.jumps_div` | `Operators` |
-| (33) scheme | `TwoPhase.Scheme` | `Scheme` |
-| (34) `X_λ`, `a` | `TwoPhase.InX`, `TwoPhase.a` | `Scheme` |
-| (36) residual identity | `TwoPhase.residuals` | `Scheme` |
+| (25)–(28) gradient | `Phase.gradω`, `gradΓ`, `grad` | `Operators` |
+| **Theorem 2**, (29) | `Phase.green_ω`, `Phase.green_Γ` | `Operators` |
+| **Theorem 2**, (30) | `Phase.green` | `Operators` |
+| (31) jumps | `Phase.jumps_grad`, `Phase.jumps_div` | `Operators` |
+| (32) scheme | `TwoPhase.Scheme` | `Scheme` |
+| (33) `X_λ`, `a` | `TwoPhase.InX`, `TwoPhase.a` | `Scheme` |
+| (35) residual identity | `TwoPhase.residuals` | `Scheme` |
 | **Proposition 3** (weak form) | `TwoPhase.weak_form` | `Scheme` |
 | **Lemma 4** (constants) | `Phase.grad_const_interior`, `Phase.grad_const_dirichlet` | `Operators` |
 | Assumption 2, anchored phase | `Phase.Connected`, `Phase.Anchored` | `Operators` |
-| **Proposition 5**, (37) | `TwoPhase.a_comm`, `a_self_nonneg`, `a_definite`, `a_kernel` | `Symmetry` |
+| **Proposition 5**, (36) | `TwoPhase.a_comm`, `a_self_nonneg`, `a_definite`, `a_kernel` | `Symmetry` |
 | unique solution (end of §5.3) | `TwoPhase.scheme_unique`, `TwoPhase.scheme_existsUnique` | `Symmetry`, `Matrices` |
-| (38) harmonic extension, existence and uniqueness | `TwoPhase.H`, `H_harmonic`, `H_existsUnique` | `Schur` |
+| (37) harmonic extension, existence and uniqueness | `TwoPhase.H`, `H_harmonic`, `H_existsUnique` | `Schur` |
 | harmonic ⟺ `div_𝓜 Q^±_η = 0` | `TwoPhase.harmonic_iff_div` | `Schur` |
-| **Proposition 6**, (39) | `TwoPhase.s_comm`, `s_min`, `s_DtN`, `s_definite`, `s_kernel` | `Schur` |
-| **Proposition 6**, (40) reduction | `TwoPhase.scheme_iff_interface` | `Schur` |
-| (41) semi-discrete weak form | `TwoPhase.weak_unsteady` | `Unsteady` |
+| **Proposition 6**, (38) | `TwoPhase.s_comm`, `s_min`, `s_DtN`, `s_definite`, `s_kernel` | `Schur` |
+| **Proposition 6**, (39) reduction | `TwoPhase.scheme_iff_interface` | `Schur` |
+| (40) semi-discrete weak form | `TwoPhase.weak_unsteady` | `Unsteady` |
 | **Corollary 7** (energy) | `TwoPhase.energy_rate` | `Unsteady` |
 | `θ`-scheme remark (§5.5) | `TwoPhase.theta_energy` | `Unsteady` |
 | §6: `A_red` = matrix of `a` | `TwoPhase.Ared`, `dotProduct_Ared`, `Ared_isSymm`, `Ared_posDef`, `Ared_kernel` | `Matrices` |
@@ -66,7 +66,7 @@ positivity of `V, W, |Γ_K|` is Lemma 1(e) and the definition of the active sets
 ## Modelling choices
 
 * All Cartesian directions share the face type `F`; `B K σ` may depend on the face (more
-  general than `B_K^α`). The second identity of (32) assumes `B` equal on the two faces of a
+  general than `B_K^α`). The second identity of (31) assumes `B` equal on the two faces of a
   direction, as in the note.
 * The traces `Φ^γ` live on `I` and are extended by zero to the other cells (`Phase.γext`),
   the convention `Φ^γ_K := 0` of §4.3.
