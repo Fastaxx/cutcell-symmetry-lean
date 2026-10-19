@@ -1,16 +1,17 @@
 /-
-Lean 4 / Mathlib formalization of the proofs of the article
-"A two-fluid cut-cell discretization as a non-overlapping domain decomposition".
+Lean 4 / Mathlib formalization of the CRAS note
+"An Analysis of Symmetry and Positive Definiteness in a Recent Two-Fluid Cut-Cell Method".
 
-* `LeanVerif.Phase`    : cut-cell operators, telescopic identity, discrete Green identity (§2–3)
-* `LeanVerif.Symmetry` : per-phase symmetry / PSD, kernel, boundary anchoring (§4.1–4.4)
-* `LeanVerif.TwoPhase` : reduced two-phase operator `A_red`, kernel, variational form,
-                         continuity case, mass terms (§4.5–4.8)
-* `LeanVerif.Schur`    : interface Schur complement, SPD, energy interpretation (§5)
-* `LeanVerif.Energy`   : discrete energy estimate (Corollary 5.1)
+* `LeanVerif.Operators` : spaces, divergences, gradient, Theorem 2 (Green), jumps, Lemma 4 (§4, §5.3)
+* `LeanVerif.Scheme`    : two-phase scheme, residual identity, Proposition 3 (§5.1–5.2)
+* `LeanVerif.Symmetry`  : Proposition 5, uniqueness (§5.3)
+* `LeanVerif.Matrices`  : `A_red` = matrix of `a`, existence and uniqueness (§5.3, §6)
+* `LeanVerif.Schur`     : harmonic extension, Proposition 6, `S_Γ` (§5.4, §6)
+* `LeanVerif.Unsteady`  : semi-discrete weak form, Corollary 7, θ-scheme (§5.5)
 -/
-import LeanVerif.Phase
+import LeanVerif.Operators
+import LeanVerif.Scheme
 import LeanVerif.Symmetry
-import LeanVerif.TwoPhase
+import LeanVerif.Matrices
 import LeanVerif.Schur
-import LeanVerif.Energy
+import LeanVerif.Unsteady
