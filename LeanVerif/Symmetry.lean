@@ -1,5 +1,5 @@
 /-
-# Symmetry and positive definiteness (Section 5.3 of the article)
+# Symmetry and positive definiteness (Section 5.2 of the article)
 
 Proposition 5: `a` is symmetric and nonnegative on `X_λ`; it is an inner product if one
 phase is anchored; otherwise its kernel is spanned by `Ψ^- ≡ 1`, `Ψ^+ ≡ λ`.
@@ -28,7 +28,7 @@ def constMode (c : ℝ) : Pair Cm Cp I := ⟨const c, const (T.lam * c)⟩
 lemma InX_constMode (c : ℝ) : T.InX (T.constMode c) := by
   unfold InX constMode; funext i; simp
 
-/-- Eq. (`energy`): `a(Ψ,Ψ) = ∑_± ℓ^± ∫ k^± |∇_𝒟Ψ^±|² ≥ 0`. -/
+/-- Eq. (22): `a(Ψ,Ψ) = ∑_± ℓ^± ∫ k^± |∇_𝒟Ψ^±|² ≥ 0`. -/
 theorem a_self_nonneg (Ψ : Pair Cm Cp I) : 0 ≤ T.a Ψ Ψ := by
   unfold a
   have h1 := T.neg.innerE_self_nonneg (T.neg.grad Ψ.m)
@@ -123,10 +123,10 @@ theorem scheme_unique (hm : T.neg.Connected) (hp : T.pos.Connected) [Nonempty I]
     rw [T.a_sub_left, h.2 _ hX, h'.2 _ hX, sub_self]
   have := T.a_definite hm hp hanch _ hX h0
   ext K
-  · exact sub_eq_zero.mp (congr_fun (congr_arg (fun Ψ : Pair Cm Cp I => Ψ.m.ω) this) K)
-  · exact sub_eq_zero.mp (congr_fun (congr_arg (fun Ψ : Pair Cm Cp I => Ψ.m.γ) this) K)
-  · exact sub_eq_zero.mp (congr_fun (congr_arg (fun Ψ : Pair Cm Cp I => Ψ.p.ω) this) K)
-  · exact sub_eq_zero.mp (congr_fun (congr_arg (fun Ψ : Pair Cm Cp I => Ψ.p.γ) this) K)
+  · exact sub_eq_zero.mp (congr_fun (congr_arg (fun Ψ : Pair Cm Cp I => Ψ.m.M) this) K)
+  · exact sub_eq_zero.mp (congr_fun (congr_arg (fun Ψ : Pair Cm Cp I => Ψ.m.Γ) this) K)
+  · exact sub_eq_zero.mp (congr_fun (congr_arg (fun Ψ : Pair Cm Cp I => Ψ.p.M) this) K)
+  · exact sub_eq_zero.mp (congr_fun (congr_arg (fun Ψ : Pair Cm Cp I => Ψ.p.Γ) this) K)
 
 end TwoPhase
 

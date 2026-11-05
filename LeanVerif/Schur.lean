@@ -1,7 +1,7 @@
 /-
-# Interface Schur complement (Section 5.4 of the article)
+# Interface Schur complement (Section 5.3 of the article)
 
-The discrete harmonic extension `ℋη` (eq. `harmonic`), the form
+The discrete harmonic extension `ℋη` (eq. (23)), the form
 `s(η,ζ) = a(ℋη,ℋζ)` and Proposition 6.  The matrix of `s` in the basis of the
 `𝟙_{Γ_K}` is `S_Γ`, the Schur complement of the bulk block of `A_red` (Section 6).
 
@@ -27,7 +27,7 @@ variable (T : TwoPhase Cm Fm Cp Fp I)
 
 /-- A state of `X_λ` with zero traces and zero energy vanishes (no anchoring needed). -/
 lemma zero_trace_definite (hm : T.neg.Connected) (hp : T.pos.Connected) [Nonempty I]
-    (Ψ : Pair Cm Cp I) (hΨ : T.InX Ψ) (h0 : Ψ.m.γ = 0) (ha : T.a Ψ Ψ = 0) : Ψ = 0 := by
+    (Ψ : Pair Cm Cp I) (hΨ : T.InX Ψ) (h0 : Ψ.m.Γ = 0) (ha : T.a Ψ Ψ = 0) : Ψ = 0 := by
   obtain ⟨c, rfl⟩ := T.eq_constMode_of_a_self_eq_zero hm hp Ψ hΨ ha
   have hc : c = 0 := by
     have := congr_fun h0 (Classical.arbitrary I); simpa [constMode] using this
@@ -36,17 +36,17 @@ lemma zero_trace_definite (hm : T.neg.Connected) (hp : T.pos.Connected) [Nonempt
 
 /-! ### Blocks of `A_red` -/
 
-/-- Bulk block `A_ω`, coupling block `B` and interface block `D_Γ` of `A_red`. -/
-def Aω : Matrix (Cm ⊕ Cp) (Cm ⊕ Cp) ℝ := T.Ared.toBlocks₁₁
+/-- Bulk block `A_bulk`, coupling block `B` and interface block `D_Γ` of `A_red`. -/
+def Abulk : Matrix (Cm ⊕ Cp) (Cm ⊕ Cp) ℝ := T.Ared.toBlocks₁₁
 def Bc : Matrix (Cm ⊕ Cp) I ℝ := T.Ared.toBlocks₁₂
 def DΓ : Matrix I I ℝ := T.Ared.toBlocks₂₂
 
-lemma Ared_eq_fromBlocks : T.Ared = fromBlocks T.Aω T.Bc T.Bcᵀ T.DΓ := by
+lemma Ared_eq_fromBlocks : T.Ared = fromBlocks T.Abulk T.Bc T.Bcᵀ T.DΓ := by
   have h21 : T.Ared.toBlocks₂₁ = T.Bcᵀ := by
     ext i j
     simp only [toBlocks₂₁, Bc, toBlocks₁₂, transpose_apply, of_apply]
     exact T.Ared_isSymm.apply _ _
-  rw [← h21]; unfold Aω Bc DΓ; rw [fromBlocks_toBlocks]
+  rw [← h21]; unfold Abulk Bc DΓ; rw [fromBlocks_toBlocks]
 
 lemma sum_elim_dotProduct {m n : Type*} [Fintype m] [Fintype n] (a c : m → ℝ) (b d : n → ℝ) :
     Sum.elim a b ⬝ᵥ Sum.elim c d = a ⬝ᵥ c + b ⬝ᵥ d := by
@@ -54,20 +54,20 @@ lemma sum_elim_dotProduct {m n : Type*} [Fintype m] [Fintype n] (a c : m → ℝ
 
 lemma dotProduct_Ared_blocks (w v : Cm ⊕ Cp → ℝ) (ζ η : I → ℝ) :
     Sum.elim w ζ ⬝ᵥ (T.Ared *ᵥ Sum.elim v η)
-      = w ⬝ᵥ (T.Aω *ᵥ v + T.Bc *ᵥ η) + ζ ⬝ᵥ (T.Bcᵀ *ᵥ v + T.DΓ *ᵥ η) := by
+      = w ⬝ᵥ (T.Abulk *ᵥ v + T.Bc *ᵥ η) + ζ ⬝ᵥ (T.Bcᵀ *ᵥ v + T.DΓ *ᵥ η) := by
   rw [T.Ared_eq_fromBlocks, fromBlocks_mulVec, Sum.elim_comp_inl, Sum.elim_comp_inr,
     sum_elim_dotProduct]
 
-/-- `A_ω` is symmetric positive definite: the interface anchors the bulk problem. -/
-theorem Aω_posDef (hm : T.neg.Connected) (hp : T.pos.Connected) [Nonempty I] :
-    T.Aω.PosDef := by
+/-- `A_bulk` is symmetric positive definite: the interface anchors the bulk problem. -/
+theorem Abulk_posDef (hm : T.neg.Connected) (hp : T.pos.Connected) [Nonempty I] :
+    T.Abulk.PosDef := by
   refine posDef_iff_dotProduct_mulVec.mpr ⟨?_, fun v hv => ?_⟩
   · refine Matrix.IsSymm.isHermitian_real ?_
     have h := T.Ared_isSymm
     rw [T.Ared_eq_fromBlocks, isSymm_fromBlocks_iff] at h
     exact h.1
   · rw [star_trivial]
-    have e : v ⬝ᵥ (T.Aω *ᵥ v) = Sum.elim v 0 ⬝ᵥ (T.Ared *ᵥ Sum.elim v 0) := by
+    have e : v ⬝ᵥ (T.Abulk *ᵥ v) = Sum.elim v 0 ⬝ᵥ (T.Ared *ᵥ Sum.elim v 0) := by
       rw [T.dotProduct_Ared_blocks]; simp
     rw [e, T.dotProduct_Ared]
     refine lt_of_le_of_ne (T.a_self_nonneg _) fun h => hv ?_
@@ -75,65 +75,65 @@ theorem Aω_posDef (hm : T.neg.Connected) (hp : T.pos.Connected) [Nonempty I] :
     rw [T.stateOf_eq_zero_iff] at h0
     funext k; exact congr_fun h0 (Sum.inl k)
 
-/-! ### Discrete harmonic extension (eq. `harmonic`) -/
+/-! ### Discrete harmonic extension (eq. (23)) -/
 
-/-- Bulk part `v_* = −A_ω⁻¹ B η` of the harmonic extension. -/
-def vStar (η : I → ℝ) : Cm ⊕ Cp → ℝ := -((T.Aω⁻¹ * T.Bc) *ᵥ η)
+/-- Bulk part `v_* = −A_bulk⁻¹ B η` of the harmonic extension. -/
+def vStar (η : I → ℝ) : Cm ⊕ Cp → ℝ := -((T.Abulk⁻¹ * T.Bc) *ᵥ η)
 
 /-- The discrete harmonic extension `ℋη ∈ X_λ`. -/
 def H (η : I → ℝ) : Pair Cm Cp I := T.stateOf (Sum.elim (T.vStar η) η)
 
 lemma InX_H (η : I → ℝ) : T.InX (T.H η) := T.InX_stateOf _
 
-lemma H_trace (η : I → ℝ) : (T.H η).m.γ = η := rfl
+lemma H_trace (η : I → ℝ) : (T.H η).m.Γ = η := rfl
 
-lemma Aω_vStar (hm : T.neg.Connected) (hp : T.pos.Connected) [Nonempty I] (η : I → ℝ) :
-    T.Aω *ᵥ T.vStar η + T.Bc *ᵥ η = 0 := by
-  have hdet : IsUnit T.Aω.det :=
-    (Matrix.isUnit_iff_isUnit_det _).mp (T.Aω_posDef hm hp).isUnit
+lemma Abulk_vStar (hm : T.neg.Connected) (hp : T.pos.Connected) [Nonempty I] (η : I → ℝ) :
+    T.Abulk *ᵥ T.vStar η + T.Bc *ᵥ η = 0 := by
+  have hdet : IsUnit T.Abulk.det :=
+    (Matrix.isUnit_iff_isUnit_det _).mp (T.Abulk_posDef hm hp).isUnit
   unfold vStar
   rw [mulVec_neg, mulVec_mulVec, ← Matrix.mul_assoc, mul_nonsing_inv _ hdet, Matrix.one_mul,
     neg_add_cancel]
 
 /-- The coefficients of a state with zero traces. -/
-lemma coeffs_of_zero_trace (Ψ : Pair Cm Cp I) (h0 : Ψ.m.γ = 0) :
-    coeffs Ψ = Sum.elim (Sum.elim Ψ.m.ω Ψ.p.ω) 0 := by
+lemma coeffs_of_zero_trace (Ψ : Pair Cm Cp I) (h0 : Ψ.m.Γ = 0) :
+    coeffs Ψ = Sum.elim (Sum.elim Ψ.m.M Ψ.p.M) 0 := by
   unfold coeffs; rw [h0]
 
-/-- Eq. (`harmonic`): `a(ℋη, Ψ) = 0` for all `Ψ ∈ X_λ` with zero traces. -/
+/-- Eq. (23): `a(ℋη, Ψ) = 0` for all `Ψ ∈ X_λ` with zero traces. -/
 theorem H_harmonic (hm : T.neg.Connected) (hp : T.pos.Connected) [Nonempty I] (η : I → ℝ)
-    (Ψ : Pair Cm Cp I) (hΨ : T.InX Ψ) (h0 : Ψ.m.γ = 0) : T.a (T.H η) Ψ = 0 := by
+    (Ψ : Pair Cm Cp I) (hΨ : T.InX Ψ) (h0 : Ψ.m.Γ = 0) : T.a (T.H η) Ψ = 0 := by
   rw [← T.stateOf_coeffs Ψ hΨ, H, ← T.dotProduct_Ared, coeffs_of_zero_trace Ψ h0,
-    T.dotProduct_Ared_blocks, T.Aω_vStar hm hp]
+    T.dotProduct_Ared_blocks, T.Abulk_vStar hm hp]
   simp
 
 /-- `ℋη` exists and is unique. -/
 theorem H_existsUnique (hm : T.neg.Connected) (hp : T.pos.Connected) [Nonempty I]
     (η : I → ℝ) :
-    ∃! Φ : Pair Cm Cp I, T.InX Φ ∧ Φ.m.γ = η
-      ∧ ∀ Ψ, T.InX Ψ → Ψ.m.γ = 0 → T.a Φ Ψ = 0 := by
+    ∃! Φ : Pair Cm Cp I, T.InX Φ ∧ Φ.m.Γ = η
+      ∧ ∀ Ψ, T.InX Ψ → Ψ.m.Γ = 0 → T.a Φ Ψ = 0 := by
   refine ⟨T.H η, ⟨T.InX_H η, T.H_trace η, T.H_harmonic hm hp η⟩, ?_⟩
   rintro Φ ⟨hX, htr, hharm⟩
   have hD := T.InX_sub hX (T.InX_H η)
-  have hD0 : (Φ - T.H η).m.γ = 0 := by simp [htr, H_trace]
+  have hD0 : (Φ - T.H η).m.Γ = 0 := by simp [htr, H_trace]
   have ha : T.a (Φ - T.H η) (Φ - T.H η) = 0 := by
     rw [T.a_sub_left, hharm _ hD hD0, T.H_harmonic hm hp η _ hD hD0, sub_self]
   have := T.zero_trace_definite hm hp _ hD hD0 ha
   ext K
-  · exact sub_eq_zero.mp (congr_fun (congr_arg (fun Ψ : Pair Cm Cp I => Ψ.m.ω) this) K)
-  · exact sub_eq_zero.mp (congr_fun (congr_arg (fun Ψ : Pair Cm Cp I => Ψ.m.γ) this) K)
-  · exact sub_eq_zero.mp (congr_fun (congr_arg (fun Ψ : Pair Cm Cp I => Ψ.p.ω) this) K)
-  · exact sub_eq_zero.mp (congr_fun (congr_arg (fun Ψ : Pair Cm Cp I => Ψ.p.γ) this) K)
+  · exact sub_eq_zero.mp (congr_fun (congr_arg (fun Ψ : Pair Cm Cp I => Ψ.m.M) this) K)
+  · exact sub_eq_zero.mp (congr_fun (congr_arg (fun Ψ : Pair Cm Cp I => Ψ.m.Γ) this) K)
+  · exact sub_eq_zero.mp (congr_fun (congr_arg (fun Ψ : Pair Cm Cp I => Ψ.p.M) this) K)
+  · exact sub_eq_zero.mp (congr_fun (congr_arg (fun Ψ : Pair Cm Cp I => Ψ.p.Γ) this) K)
 
-/-- Harmonicity is the bulk balance without source: `div_𝓜 Q^±_η = 0`. -/
+/-- Harmonicity is the bulk balance without source, with the fluxes `Q^± = −k^± ∇_𝒟`. -/
 theorem harmonic_iff_div (Φ : Pair Cm Cp I) :
-    (∀ Ψ, T.InX Ψ → Ψ.m.γ = 0 → T.a Φ Ψ = 0)
+    (∀ Ψ, T.InX Ψ → Ψ.m.Γ = 0 → T.a Φ Ψ = 0)
       ↔ T.neg.divM (T.Qm Φ) = 0 ∧ T.pos.divM (T.Qp Φ) = 0 := by
   constructor
   · intro h
-    have hres : ∀ Ψ, T.InX Ψ → Ψ.m.γ = 0 →
-        T.neg.innerM (T.neg.divM (T.Qm Φ)) Ψ.m.ω
-          + 1 / T.lam * T.pos.innerM (T.pos.divM (T.Qp Φ)) Ψ.p.ω = 0 := by
+    have hres : ∀ Ψ, T.InX Ψ → Ψ.m.Γ = 0 →
+        T.neg.innerM (T.neg.divM (T.Qm Φ)) Ψ.m.M
+          + 1 / T.lam * T.pos.innerM (T.pos.divM (T.Qp Φ)) Ψ.p.M = 0 := by
       intro Ψ hΨ h0
       have := T.residuals 0 0 Φ Ψ hΨ
       rw [h Ψ hΨ h0, T.rhs_zero, h0, Phase.innerΓ_zero_right, sub_zero, sub_zero, sub_zero,
@@ -142,12 +142,12 @@ theorem harmonic_iff_div (Φ : Pair Cm Cp I) :
     refine ⟨?_, ?_⟩
     · funext K
       have := hres ⟨⟨Pi.single K 1, 0⟩, 0⟩ (by simp [InX]) rfl
-      simp only [zero_ω, Phase.innerM_single, Phase.innerM_zero_right, mul_zero,
+      simp only [zero_M, Phase.innerM_single, Phase.innerM_zero_right, mul_zero,
         add_zero] at this
       exact (mul_eq_zero.mp this).resolve_left (T.neg.V_pos K).ne'
     · funext K
       have := hres ⟨0, ⟨Pi.single K 1, 0⟩⟩ (by simp [InX]) rfl
-      simp only [zero_ω, Phase.innerM_single, Phase.innerM_zero_right,
+      simp only [zero_M, Phase.innerM_single, Phase.innerM_zero_right,
         zero_add] at this
       have hl : (1 / T.lam) ≠ 0 := by have := T.lam_pos; positivity
       exact (mul_eq_zero.mp ((mul_eq_zero.mp this).resolve_left hl)).resolve_left
@@ -160,6 +160,18 @@ theorem harmonic_iff_div (Φ : Pair Cm Cp I) :
       add_zero] at this
     exact this.symm
 
+/-- Section 5.3: eq. (23) is `div_𝓜(k^± ∇_𝒟 Φ̲^±) = 0` in `X^±_𝓜`, one problem per phase. -/
+theorem harmonic_iff_div_grad (Φ : Pair Cm Cp I) :
+    (∀ Ψ, T.InX Ψ → Ψ.m.Γ = 0 → T.a Φ Ψ = 0)
+      ↔ T.neg.divM (fun σ => T.km * T.neg.grad Φ.m σ) = 0
+        ∧ T.pos.divM (fun σ => T.kp * T.pos.grad Φ.p σ) = 0 := by
+  have e1 : T.Qm Φ = fun σ => (-1 : ℝ) * (T.km * T.neg.grad Φ.m σ) := by
+    funext σ; simp [Qm]
+  have e2 : T.Qp Φ = fun σ => (-1 : ℝ) * (T.kp * T.pos.grad Φ.p σ) := by
+    funext σ; simp [Qp]
+  rw [T.harmonic_iff_div, e1, e2, T.neg.divM_mul (-1), T.pos.divM_mul (-1)]
+  simp
+
 /-! ### Proposition 6 -/
 
 /-- `s(η,ζ) := a(ℋη, ℋζ)`. -/
@@ -169,20 +181,27 @@ theorem s_comm (η ζ : I → ℝ) : T.s η ζ = T.s ζ η := T.a_comm _ _
 
 theorem s_nonneg (η : I → ℝ) : 0 ≤ T.s η η := T.a_self_nonneg _
 
-/-- First formula of (`schur`): `s(η,η) = min {a(Ψ,Ψ) : Ψ ∈ X_λ, Ψ^{γ−} = η}`. -/
+/-- `ℋη` has the least energy among the states of `X_λ` with trace `η`. -/
 theorem s_min (hm : T.neg.Connected) (hp : T.pos.Connected) [Nonempty I] (η : I → ℝ)
-    (Ψ : Pair Cm Cp I) (hΨ : T.InX Ψ) (htr : Ψ.m.γ = η) : T.s η η ≤ T.a Ψ Ψ := by
+    (Ψ : Pair Cm Cp I) (hΨ : T.InX Ψ) (htr : Ψ.m.Γ = η) : T.s η η ≤ T.a Ψ Ψ := by
   have hX0 := T.InX_sub hΨ (T.InX_H η)
-  have h0 : (Ψ - T.H η).m.γ = 0 := by simp [htr, H_trace]
+  have h0 : (Ψ - T.H η).m.Γ = 0 := by simp [htr, H_trace]
   have hdec : Ψ = T.H η + (Ψ - T.H η) := by ext <;> simp
   have hc : T.a (T.H η) (Ψ - T.H η) = 0 := T.H_harmonic hm hp η _ hX0 h0
   rw [hdec, T.a_add_left, T.a_add_right, T.a_add_right, hc, T.a_comm (Ψ - T.H η), hc]
   have := T.a_self_nonneg (Ψ - T.H η)
   unfold s; linarith
 
-/-- Second formula of (`schur`): `s(η,ζ) = −∫_Γ (div_Γ Q^-_η + div_Γ Q^+_η) ζ`, the discrete
-Dirichlet-to-Neumann operator. -/
-theorem s_DtN (hm : T.neg.Connected) (hp : T.pos.Connected) [Nonempty I] (η ζ : I → ℝ) :
+/-- First formula of (24): `s(η,η) = min {a(Ψ,Ψ) : Ψ ∈ X_λ, Ψ^-_Γ = η}`; the minimum is
+attained, at `ℋη`. -/
+theorem s_isLeast (hm : T.neg.Connected) (hp : T.pos.Connected) [Nonempty I] (η : I → ℝ) :
+    IsLeast {x | ∃ Ψ : Pair Cm Cp I, T.InX Ψ ∧ Ψ.m.Γ = η ∧ x = T.a Ψ Ψ} (T.s η η) := by
+  refine ⟨⟨T.H η, T.InX_H η, T.H_trace η, rfl⟩, ?_⟩
+  rintro _ ⟨Ψ, hΨ, htr, rfl⟩
+  exact T.s_min hm hp η Ψ hΨ htr
+
+/-- The flux imbalance of `ℋη`: `s(η,ζ) = −∫_Γ (div_Γ Q^-_η + div_Γ Q^+_η) ζ`. -/
+theorem s_flux (hm : T.neg.Connected) (hp : T.pos.Connected) [Nonempty I] (η ζ : I → ℝ) :
     T.s η ζ = -T.neg.innerΓ (T.neg.divΓ (T.Qm (T.H η)) + T.pos.divΓ (T.Qp (T.H η))) ζ := by
   obtain ⟨d1, d2⟩ := (T.harmonic_iff_div (T.H η)).mp (T.H_harmonic hm hp η)
   have := T.residuals 0 0 (T.H η) (T.H ζ) (T.InX_H ζ)
@@ -190,6 +209,23 @@ theorem s_DtN (hm : T.neg.Connected) (hp : T.pos.Connected) [Nonempty I] (η ζ 
   simp only [Phase.innerM, Pi.zero_apply, mul_zero, zero_mul, Finset.sum_const_zero,
     add_zero, zero_sub] at this
   unfold s; linarith
+
+/-- Second formula of (24), the discrete Dirichlet-to-Neumann operator:
+`s(η,ζ) = ∫_Γ ∑_± k^± div_Γ(∇_𝒟 (ℋη)^±) ζ`. -/
+theorem s_DtN (hm : T.neg.Connected) (hp : T.pos.Connected) [Nonempty I] (η ζ : I → ℝ) :
+    T.s η ζ = T.neg.innerΓ (T.km • T.neg.divΓ (T.neg.grad (T.H η).m)
+      + T.kp • T.pos.divΓ (T.pos.grad (T.H η).p)) ζ := by
+  rw [T.s_flux hm hp η ζ]
+  have e1 : T.neg.divΓ (T.Qm (T.H η)) = (-T.km) • T.neg.divΓ (T.neg.grad (T.H η).m) :=
+    T.neg.divΓ_mul (-T.km) (T.neg.grad (T.H η).m)
+  have e2 : T.pos.divΓ (T.Qp (T.H η)) = (-T.kp) • T.pos.divΓ (T.pos.grad (T.H η).p) :=
+    T.pos.divΓ_mul (-T.kp) (T.pos.grad (T.H η).p)
+  rw [e1, e2]
+  unfold Phase.innerΓ
+  rw [← Finset.sum_neg_distrib]
+  refine Finset.sum_congr rfl fun i _ => ?_
+  simp only [Pi.add_apply, Pi.smul_apply, smul_eq_mul]
+  ring
 
 /-- Proposition 6: `s` is an inner product if one phase is anchored. -/
 theorem s_definite (hm : T.neg.Connected) (hp : T.pos.Connected) [Nonempty I]
@@ -211,19 +247,19 @@ theorem s_kernel (hm : T.neg.Connected) (hp : T.pos.Connected) [Nonempty I]
     rw [(T.a_kernel hm hp hnm hnp _ (T.InX_constMode c)).mpr ⟨c, rfl⟩] at h1
     exact le_antisymm h1 (T.s_nonneg _)
 
-/-- Proposition 6, reduction to the interface (eq. `schur-problem`): `Φ ∈ X_λ` solves the
-scheme iff `Φ − ℋΦ^{γ−}` satisfies the weak form against the states with zero traces and
-`s(Φ^{γ−}, ζ) = ∑_± ℓ^± ∫ r^± (ℋζ)^{ω±}` for all `ζ`. -/
+/-- Proposition 6, reduction to the interface (eq. (25)): `Φ ∈ X_λ` solves the
+scheme iff `Φ − ℋΦ^-_Γ` satisfies the weak form against the states with zero traces and
+`s(Φ^-_Γ, ζ) = ∑_± ℓ^± ∫ r^± Z^±` for all `ζ`. -/
 theorem scheme_iff_interface (hm : T.neg.Connected) (hp : T.pos.Connected) [Nonempty I]
     (rm : Cm → ℝ) (rp : Cp → ℝ) (Φ : Pair Cm Cp I) (hΦ : T.InX Φ) :
     T.Scheme rm rp Φ ↔
-      (∀ Ψ, T.InX Ψ → Ψ.m.γ = 0 → T.a (Φ - T.H Φ.m.γ) Ψ = T.rhs rm rp Ψ)
-        ∧ ∀ ζ, T.s Φ.m.γ ζ = T.rhs rm rp (T.H ζ) := by
-  set η := Φ.m.γ
+      (∀ Ψ, T.InX Ψ → Ψ.m.Γ = 0 → T.a (Φ - T.H Φ.m.Γ) Ψ = T.rhs rm rp Ψ)
+        ∧ ∀ ζ, T.s Φ.m.Γ ζ = T.rhs rm rp (T.H ζ) := by
+  set η := Φ.m.Γ
   have hX0 := T.InX_sub hΦ (T.InX_H η)
-  have h00 : (Φ - T.H η).m.γ = 0 := by simp [η, H_trace]
+  have h00 : (Φ - T.H η).m.Γ = 0 := by simp [η, H_trace]
   -- `a(Φ,Ψ₀) = a(Φ − ℋη, Ψ₀)` and `a(Φ, ℋζ) = s(η,ζ)`
-  have k2 : ∀ Ψ, T.InX Ψ → Ψ.m.γ = 0 → T.a (Φ - T.H η) Ψ = T.a Φ Ψ := by
+  have k2 : ∀ Ψ, T.InX Ψ → Ψ.m.Γ = 0 → T.a (Φ - T.H η) Ψ = T.a Φ Ψ := by
     intro Ψ hΨ h0; rw [T.a_sub_left, T.H_harmonic hm hp η Ψ hΨ h0, sub_zero]
   have k3 : ∀ ζ, T.a Φ (T.H ζ) = T.s η ζ := by
     intro ζ
@@ -237,23 +273,23 @@ theorem scheme_iff_interface (hm : T.neg.Connected) (hp : T.pos.Connected) [None
       fun ζ => by rw [← k3 ζ, h _ (T.InX_H ζ)]⟩
   · rintro ⟨h1, h2⟩
     refine ⟨hΦ, fun Ψ hΨ => ?_⟩
-    have hΨ0 := T.InX_sub hΨ (T.InX_H Ψ.m.γ)
-    have hΨ00 : (Ψ - T.H Ψ.m.γ).m.γ = 0 := by simp [H_trace]
-    have e1 : T.a Φ Ψ = T.a Φ (Ψ - T.H Ψ.m.γ) + T.a Φ (T.H Ψ.m.γ) := by
+    have hΨ0 := T.InX_sub hΨ (T.InX_H Ψ.m.Γ)
+    have hΨ00 : (Ψ - T.H Ψ.m.Γ).m.Γ = 0 := by simp [H_trace]
+    have e1 : T.a Φ Ψ = T.a Φ (Ψ - T.H Ψ.m.Γ) + T.a Φ (T.H Ψ.m.Γ) := by
       rw [T.a_sub_right]; ring
     rw [e1, ← k2 _ hΨ0 hΨ00, h1 _ hΨ0 hΨ00, k3, h2, T.rhs_sub]
     ring
 
 /-! ### The matrix `S_Γ` (Section 6) -/
 
-/-- `S_Γ = D_Γ − Bᵀ A_ω⁻¹ B`, the Schur complement of the bulk block of `A_red`. -/
-def SΓ : Matrix I I ℝ := T.DΓ - T.Bcᵀ * T.Aω⁻¹ * T.Bc
+/-- `S_Γ = D_Γ − Bᵀ A_bulk⁻¹ B`, the Schur complement of the bulk block of `A_red`. -/
+def SΓ : Matrix I I ℝ := T.DΓ - T.Bcᵀ * T.Abulk⁻¹ * T.Bc
 
 /-- `S_Γ` is the matrix of `s`: `ζᵀ S_Γ η = s(η,ζ)`. -/
 theorem dotProduct_SΓ (hm : T.neg.Connected) (hp : T.pos.Connected) [Nonempty I]
     (η ζ : I → ℝ) : ζ ⬝ᵥ (T.SΓ *ᵥ η) = T.s η ζ := by
   unfold s H
-  rw [← T.dotProduct_Ared, T.dotProduct_Ared_blocks, T.Aω_vStar hm hp, dotProduct_zero,
+  rw [← T.dotProduct_Ared, T.dotProduct_Ared_blocks, T.Abulk_vStar hm hp, dotProduct_zero,
     zero_add]
   unfold SΓ vStar
   rw [sub_mulVec, mulVec_neg, mulVec_mulVec, ← Matrix.mul_assoc, sub_eq_neg_add, add_comm]

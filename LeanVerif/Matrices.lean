@@ -6,7 +6,7 @@ In the basis of `X_λ` made of the `𝟙_{K^-}`, the `𝟙_{K^+}` and the pairs
 `J = (𝓜^- ⊕ 𝓜^+) ⊕ 𝓜^Γ` (`stateOf x`).  The matrix of `a` in this basis is `A_red`;
 it is symmetric, positive definite if one phase is anchored, and its kernel is spanned
 by the coefficients of `(1, λ)` otherwise.  As a consequence the scheme has a unique
-solution if one phase is anchored (end of Section 5.3).
+solution if one phase is anchored (after Proposition 5).
 -/
 import LeanVerif.Symmetry
 
@@ -45,8 +45,8 @@ lemma linear_eq_dotProduct {J : Type*} [Fintype J] [DecidableEq J] (f : (J → �
 def stateOf (x : (Cm ⊕ Cp) ⊕ I → ℝ) : Pair Cm Cp I :=
   ⟨⟨x ∘ Sum.inl ∘ Sum.inl, x ∘ Sum.inr⟩, ⟨x ∘ Sum.inl ∘ Sum.inr, T.lam • (x ∘ Sum.inr)⟩⟩
 
-/-- The coefficients of a pair (its trace `Ψ^{γ−}` gives the last block). -/
-def coeffs (Ψ : Pair Cm Cp I) : (Cm ⊕ Cp) ⊕ I → ℝ := Sum.elim (Sum.elim Ψ.m.ω Ψ.p.ω) Ψ.m.γ
+/-- The coefficients of a pair (its trace `Ψ^-_Γ` gives the last block). -/
+def coeffs (Ψ : Pair Cm Cp I) : (Cm ⊕ Cp) ⊕ I → ℝ := Sum.elim (Sum.elim Ψ.m.M Ψ.p.M) Ψ.m.Γ
 
 lemma InX_stateOf (x : (Cm ⊕ Cp) ⊕ I → ℝ) : T.InX (T.stateOf x) := rfl
 
@@ -72,9 +72,9 @@ lemma stateOf_eq_zero_iff (x : (Cm ⊕ Cp) ⊕ I → ℝ) : T.stateOf x = 0 ↔ 
   constructor
   · intro h
     ext ((K | K) | i)
-    · exact congr_fun (congr_arg (fun Ψ : Pair Cm Cp I => Ψ.m.ω) h) K
-    · exact congr_fun (congr_arg (fun Ψ : Pair Cm Cp I => Ψ.p.ω) h) K
-    · exact congr_fun (congr_arg (fun Ψ : Pair Cm Cp I => Ψ.m.γ) h) i
+    · exact congr_fun (congr_arg (fun Ψ : Pair Cm Cp I => Ψ.m.M) h) K
+    · exact congr_fun (congr_arg (fun Ψ : Pair Cm Cp I => Ψ.p.M) h) K
+    · exact congr_fun (congr_arg (fun Ψ : Pair Cm Cp I => Ψ.m.Γ) h) i
   · rintro rfl; unfold stateOf; ext <;> simp
 
 /-- `x ↦ ∇_𝒟 Φ^-` for `Φ = stateOf x`, as a linear map. -/
@@ -149,12 +149,12 @@ def rhsLin (rm : Cm → ℝ) (rp : Cp → ℝ) : ((Cm ⊕ Cp) ⊕ I → ℝ) →
   map_smul' c x := by
     rw [T.stateOf_smul]
     unfold rhs
-    simp only [Pair.smul_m, Pair.smul_p, smul_ω, RingHom.id_apply, smul_eq_mul]
+    simp only [Pair.smul_m, Pair.smul_p, smul_M, RingHom.id_apply, smul_eq_mul]
     rw [T.neg.innerM_comm, T.pos.innerM_comm, T.neg.innerM_smul_left, T.pos.innerM_smul_left,
       T.neg.innerM_comm, T.pos.innerM_comm]
     ring
 
-/-- The right-hand side vector `b_j = ∑_± ℓ^± ∫ r^± (e_j)^{ω±}`. -/
+/-- The right-hand side vector `b_j = ∑_± ℓ^± ∫ r^± (e_j)^±`. -/
 def bvec (rm : Cm → ℝ) (rp : Cp → ℝ) : (Cm ⊕ Cp) ⊕ I → ℝ :=
   fun j => T.rhsLin rm rp (Pi.single j 1)
 
@@ -176,7 +176,7 @@ theorem scheme_iff_Ared (rm : Cm → ℝ) (rp : Cp → ℝ) (x : (Cm ⊕ Cp) ⊕
     refine ⟨T.InX_stateOf x, fun Ψ hΨ => ?_⟩
     rw [← T.stateOf_coeffs Ψ hΨ, ← T.dotProduct_Ared, ← T.dotProduct_bvec, h]
 
-/-- End of Section 5.3: if one phase is anchored, the scheme has a unique solution. -/
+/-- After Proposition 5: if one phase is anchored, the scheme has a unique solution. -/
 theorem scheme_existsUnique (hm : T.neg.Connected) (hp : T.pos.Connected) [Nonempty I]
     (hanch : T.neg.Anchored ∨ T.pos.Anchored) (rm : Cm → ℝ) (rp : Cp → ℝ) :
     ∃! Φ : Pair Cm Cp I, T.Scheme rm rp Φ := by

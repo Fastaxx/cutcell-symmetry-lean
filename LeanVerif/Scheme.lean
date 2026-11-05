@@ -1,9 +1,9 @@
 /-
-# The scheme and its weak form (Sections 5.1–5.2 of the article)
+# The scheme and its weak form (Section 5 of the article)
 
 The two phases share the interface cells `𝓜^Γ` (type `I`) and the areas `|Γ_K|`.
-The source enters only through its cell means `Π^±_𝓜 r^±` (`rm`, `rp`), since
-`∫ r^± Ψ^{ω±} = ∫ Π^±_𝓜 r^± Ψ^{ω±}` for `Ψ^{ω±} ∈ X^±_𝓜`.
+The source enters only through its cell means `r̄^±` (`rm`, `rp`), since
+`∫ r^± Ψ^± = ∫ r̄^± Ψ^±` for `Ψ^± ∈ X^±_𝓜`.
 -/
 import LeanVerif.Operators
 
@@ -74,12 +74,25 @@ lemma innerE_neg_smul_right (k : ℝ) (Q R : F → ℝ) :
   unfold innerE; rw [Finset.mul_sum]
   exact Finset.sum_congr rfl fun _ _ => by ring
 
+/-- Scaling of the divergences. -/
+lemma divM_mul (c : ℝ) (g : F → ℝ) : P.divM (fun σ => c * g σ) = c • P.divM g := by
+  funext K
+  have h : P.divK (fun σ => c * g σ) K = c * P.divK g K := by
+    unfold divK; rw [Finset.mul_sum]; exact Finset.sum_congr rfl fun _ _ => by ring
+  simp only [divM, Pi.smul_apply, smul_eq_mul]; rw [h, mul_div_assoc]
+
+lemma divΓ_mul (c : ℝ) (g : F → ℝ) : P.divΓ (fun σ => c * g σ) = c • P.divΓ g := by
+  funext i
+  have h : P.divΓK (fun σ => c * g σ) (P.ι i) = c * P.divΓK g (P.ι i) := by
+    unfold divΓK; rw [Finset.mul_sum]; exact Finset.sum_congr rfl fun _ _ => by ring
+  simp only [divΓ, Pi.smul_apply, smul_eq_mul]; rw [h, mul_div_assoc]
+
 /-- Theorem 2 with `Q = −k ∇_𝒟 Φ`:
-`∫ Ψ^ω div_𝓜 Q = k ∫ ∇_𝒟Φ·∇_𝒟Ψ + ∫_Γ Ψ^γ div_Γ Q`. -/
+`∫ Ψ div_𝓜 Q = k ∫ ∇_𝒟Φ·∇_𝒟Ψ + ∫_Γ Ψ_Γ div_Γ Q`. -/
 theorem green_flux (k : ℝ) (Φ Ψ : Field C I) :
-    P.innerM Ψ.ω (P.divM fun σ => -k * P.grad Φ σ)
+    P.innerM Ψ.M (P.divM fun σ => -k * P.grad Φ σ)
       = k * P.innerE (P.grad Φ) (P.grad Ψ)
-        + P.innerΓ Ψ.γ (P.divΓ fun σ => -k * P.grad Φ σ) := by
+        + P.innerΓ Ψ.Γ (P.divΓ fun σ => -k * P.grad Φ σ) := by
   have h := P.green Ψ (fun σ => -k * P.grad Φ σ)
   rw [P.innerE_neg_smul_right] at h
   linarith
@@ -88,8 +101,8 @@ end Phase
 
 open Phase
 
-/-- The two-phase data: two phases sharing `𝓜^Γ` and `|Γ_K|`, the conductivities
-`k^± > 0` and the Henry coefficient `λ > 0`. -/
+/-- The two-phase data: two phases sharing `𝓜^Γ` and `|Γ_K|` (Lemma 1(a)), the
+coefficients `k^± > 0` and `λ > 0`. -/
 structure TwoPhase (Cm Fm Cp Fp I : Type*) [Fintype Cm] [Fintype Cp] where
   neg : Phase Cm Fm I
   pos : Phase Cp Fp I
@@ -102,7 +115,7 @@ structure TwoPhase (Cm Fm Cp Fp I : Type*) [Fintype Cm] [Fintype Cp] where
   /-- both phases see the same interface pieces `Γ_K` -/
   G_eq : pos.G = neg.G
 
-/-- A two-phase state `Φ = (Φ^-, Φ^+)`, `Φ^± = (Φ^{ω±}, Φ^{γ±})`. -/
+/-- A two-phase state `(Φ̲^-, Φ̲^+)`, with `Φ̲^± = (Φ^±, Φ^±_Γ)`. -/
 @[ext]
 structure Pair (Cm Cp I : Type*) where
   m : Field Cm I
@@ -134,8 +147,8 @@ variable {Cm Fm Cp Fp I : Type*} [Fintype Cm] [Fintype Fm] [Fintype Cp] [Fintype
   [DecidableEq Cm] [DecidableEq Fm] [DecidableEq Cp] [DecidableEq Fp] [DecidableEq I]
 variable (T : TwoPhase Cm Fm Cp Fp I)
 
-/-- `X_λ` (eq. `X-lambda`): the trace law `Ψ^{γ+} = λ Ψ^{γ−}`. -/
-def InX (Ψ : Pair Cm Cp I) : Prop := Ψ.p.γ = T.lam • Ψ.m.γ
+/-- `X_λ` (eq. (19)): the trace law `Ψ^+_Γ = λ Ψ^-_Γ`. -/
+def InX (Ψ : Pair Cm Cp I) : Prop := Ψ.p.Γ = T.lam • Ψ.m.Γ
 
 lemma InX_zero : T.InX 0 := by simp [InX]
 
@@ -148,7 +161,7 @@ lemma InX_sub {Φ Ψ : Pair Cm Cp I} (hΦ : T.InX Φ) (hΨ : T.InX Ψ) : T.InX (
 lemma InX_smul (c : ℝ) {Φ : Pair Cm Cp I} (hΦ : T.InX Φ) : T.InX (c • Φ) := by
   unfold InX at *; simp [hΦ, smul_comm c T.lam]
 
-/-- The bilinear form (eq. `X-lambda`), with `ℓ^- = 1`, `ℓ^+ = 1/λ`:
+/-- The bilinear form (eq. (19)), with `ℓ^- = 1`, `ℓ^+ = 1/λ`:
 `a(Φ,Ψ) = ∑_± ℓ^± ∫ k^± ∇_𝒟Φ^±·∇_𝒟Ψ^±`. -/
 def a (Φ Ψ : Pair Cm Cp I) : ℝ :=
   T.km * T.neg.innerE (T.neg.grad Φ.m) (T.neg.grad Ψ.m)
@@ -191,21 +204,21 @@ lemma a_smul_right (c : ℝ) (Φ Ξ : Pair Cm Cp I) : T.a Ξ (c • Φ) = c * T.
 def Qm (Φ : Pair Cm Cp I) : Fm → ℝ := fun σ => -T.km * T.neg.grad Φ.m σ
 def Qp (Φ : Pair Cm Cp I) : Fp → ℝ := fun σ => -T.kp * T.pos.grad Φ.p σ
 
-/-- The scheme (eq. `scheme`) with `g_D = 0`, `g_Γ = 0`:
-`div_𝓜 Q^± = Π^±_𝓜 r^±`, `div_Γ Q^- + div_Γ Q^+ = 0`, `Φ^{γ+} = λ Φ^{γ−}`. -/
+/-- The scheme (eq. (18)) with `g_D = 0`, `g_Γ = 0`:
+`div_𝓜 Q^± = r̄^±`, `div_Γ Q^- + div_Γ Q^+ = 0`, `Φ^+_Γ = λ Φ^-_Γ`. -/
 def Scheme (rm : Cm → ℝ) (rp : Cp → ℝ) (Φ : Pair Cm Cp I) : Prop :=
   T.neg.divM (T.Qm Φ) = rm ∧ T.pos.divM (T.Qp Φ) = rp
     ∧ T.neg.divΓ (T.Qm Φ) + T.pos.divΓ (T.Qp Φ) = 0 ∧ T.InX Φ
 
-/-- The right-hand side `∑_± ℓ^± ∫ r^± Ψ^{ω±}`. -/
+/-- The right-hand side `∑_± ℓ^± ∫ r^± Ψ^±`. -/
 def rhs (rm : Cm → ℝ) (rp : Cp → ℝ) (Ψ : Pair Cm Cp I) : ℝ :=
-  T.neg.innerM rm Ψ.m.ω + 1 / T.lam * T.pos.innerM rp Ψ.p.ω
+  T.neg.innerM rm Ψ.m.M + 1 / T.lam * T.pos.innerM rp Ψ.p.M
 
 lemma rhs_add (rm : Cm → ℝ) (rp : Cp → ℝ) (Φ Ψ : Pair Cm Cp I) :
     T.rhs rm rp (Φ + Ψ) = T.rhs rm rp Φ + T.rhs rm rp Ψ := by
   unfold rhs
   rw [T.neg.innerM_comm, T.pos.innerM_comm]
-  simp only [Pair.add_m, Pair.add_p, add_ω, T.neg.innerM_add_left, T.pos.innerM_add_left]
+  simp only [Pair.add_m, Pair.add_p, add_M, T.neg.innerM_add_left, T.pos.innerM_add_left]
   rw [T.neg.innerM_comm _ rm, T.neg.innerM_comm _ rm, T.pos.innerM_comm _ rp,
     T.pos.innerM_comm _ rp]
   ring
@@ -214,7 +227,7 @@ lemma rhs_sub (rm : Cm → ℝ) (rp : Cp → ℝ) (Φ Ψ : Pair Cm Cp I) :
     T.rhs rm rp (Φ - Ψ) = T.rhs rm rp Φ - T.rhs rm rp Ψ := by
   unfold rhs
   rw [T.neg.innerM_comm, T.pos.innerM_comm]
-  simp only [Pair.sub_m, Pair.sub_p, sub_ω, T.neg.innerM_sub_left, T.pos.innerM_sub_left]
+  simp only [Pair.sub_m, Pair.sub_p, sub_M, T.neg.innerM_sub_left, T.pos.innerM_sub_left]
   rw [T.neg.innerM_comm _ rm, T.neg.innerM_comm _ rm, T.pos.innerM_comm _ rp,
     T.pos.innerM_comm _ rp]
   ring
@@ -226,30 +239,30 @@ lemma rhs_zero (Ψ : Pair Cm Cp I) : T.rhs 0 0 Ψ = 0 := by
 lemma innerΓ_pos (f g : I → ℝ) : T.pos.innerΓ f g = T.neg.innerΓ f g := by
   unfold Phase.innerΓ; rw [T.G_eq]
 
-/-- Eq. (`residuals`): for `Ψ ∈ X_λ`,
-`∑_± ℓ^± ∫ (div_𝓜 Q^± − Π r^±) Ψ^{ω±} − ∫_Γ (div_Γ Q^- + div_Γ Q^+) Ψ^{γ−}
-  = a(Φ,Ψ) − ∑_± ℓ^± ∫ r^± Ψ^{ω±}`. -/
+/-- Eq. (21): for `Ψ ∈ X_λ`,
+`∑_± ℓ^± ∫ (div_𝓜 Q^± − r̄^±) Ψ^± − ∫_Γ (div_Γ Q^- + div_Γ Q^+) Ψ^-_Γ
+  = a(Φ,Ψ) − ∑_± ℓ^± ∫ r^± Ψ^±`. -/
 theorem residuals (rm : Cm → ℝ) (rp : Cp → ℝ) (Φ Ψ : Pair Cm Cp I) (hΨ : T.InX Ψ) :
-    T.neg.innerM (T.neg.divM (T.Qm Φ) - rm) Ψ.m.ω
-      + 1 / T.lam * T.pos.innerM (T.pos.divM (T.Qp Φ) - rp) Ψ.p.ω
-      - T.neg.innerΓ (T.neg.divΓ (T.Qm Φ) + T.pos.divΓ (T.Qp Φ)) Ψ.m.γ
+    T.neg.innerM (T.neg.divM (T.Qm Φ) - rm) Ψ.m.M
+      + 1 / T.lam * T.pos.innerM (T.pos.divM (T.Qp Φ) - rp) Ψ.p.M
+      - T.neg.innerΓ (T.neg.divΓ (T.Qm Φ) + T.pos.divΓ (T.Qp Φ)) Ψ.m.Γ
       = T.a Φ Ψ - T.rhs rm rp Ψ := by
-  have hm : T.neg.innerM Ψ.m.ω (T.neg.divM (T.Qm Φ))
+  have hm : T.neg.innerM Ψ.m.M (T.neg.divM (T.Qm Φ))
       = T.km * T.neg.innerE (T.neg.grad Φ.m) (T.neg.grad Ψ.m)
-        + T.neg.innerΓ Ψ.m.γ (T.neg.divΓ (T.Qm Φ)) := T.neg.green_flux T.km Φ.m Ψ.m
-  have hp : T.pos.innerM Ψ.p.ω (T.pos.divM (T.Qp Φ))
+        + T.neg.innerΓ Ψ.m.Γ (T.neg.divΓ (T.Qm Φ)) := T.neg.green_flux T.km Φ.m Ψ.m
+  have hp : T.pos.innerM Ψ.p.M (T.pos.divM (T.Qp Φ))
       = T.kp * T.pos.innerE (T.pos.grad Φ.p) (T.pos.grad Ψ.p)
-        + T.pos.innerΓ Ψ.p.γ (T.pos.divΓ (T.Qp Φ)) := T.pos.green_flux T.kp Φ.p Ψ.p
+        + T.pos.innerΓ Ψ.p.Γ (T.pos.divΓ (T.Qp Φ)) := T.pos.green_flux T.kp Φ.p Ψ.p
   rw [hΨ, T.innerΓ_pos, Phase.innerΓ_smul_left, Phase.innerΓ_comm] at hp
   rw [Phase.innerΓ_comm] at hm
   unfold a rhs
   rw [T.neg.innerM_sub_left, T.pos.innerM_sub_left, T.neg.innerΓ_add_left,
     T.neg.innerM_comm (T.neg.divM _), T.pos.innerM_comm (T.pos.divM _), hm, hp]
   have hl : 1 / T.lam * T.lam = 1 := by field_simp [T.lam_pos.ne']
-  linear_combination (T.neg.innerΓ (T.pos.divΓ (T.Qp Φ)) Ψ.m.γ) * hl
+  linear_combination (T.neg.innerΓ (T.pos.divΓ (T.Qp Φ)) Ψ.m.Γ) * hl
 
 /-- **Proposition 3** (weak form): `Φ` solves the scheme iff `Φ ∈ X_λ` and
-`a(Φ,Ψ) = ∑_± ℓ^± ∫ r^± Ψ^{ω±}` for all `Ψ ∈ X_λ`. -/
+`a(Φ,Ψ) = ∑_± ℓ^± ∫ r^± Ψ^±` for all `Ψ ∈ X_λ`. -/
 theorem weak_form (rm : Cm → ℝ) (rp : Cp → ℝ) (Φ : Pair Cm Cp I) :
     T.Scheme rm rp Φ ↔ T.InX Φ ∧ ∀ Ψ, T.InX Ψ → T.a Φ Ψ = T.rhs rm rp Ψ := by
   constructor
@@ -262,21 +275,21 @@ theorem weak_form (rm : Cm → ℝ) (rp : Cp → ℝ) (Φ : Pair Cm Cp I) :
     linarith
   · rintro ⟨hX, h⟩
     have hres : ∀ Ψ, T.InX Ψ →
-        T.neg.innerM (T.neg.divM (T.Qm Φ) - rm) Ψ.m.ω
-          + 1 / T.lam * T.pos.innerM (T.pos.divM (T.Qp Φ) - rp) Ψ.p.ω
-          - T.neg.innerΓ (T.neg.divΓ (T.Qm Φ) + T.pos.divΓ (T.Qp Φ)) Ψ.m.γ = 0 := by
+        T.neg.innerM (T.neg.divM (T.Qm Φ) - rm) Ψ.m.M
+          + 1 / T.lam * T.pos.innerM (T.pos.divM (T.Qp Φ) - rp) Ψ.p.M
+          - T.neg.innerΓ (T.neg.divΓ (T.Qm Φ) + T.pos.divΓ (T.Qp Φ)) Ψ.m.Γ = 0 := by
       intro Ψ hΨ; rw [T.residuals rm rp Φ Ψ hΨ, h Ψ hΨ, sub_self]
     refine ⟨?_, ?_, ?_, hX⟩
     · funext K
       have := hres ⟨⟨Pi.single K 1, 0⟩, 0⟩ (by simp [InX])
-      simp only [zero_ω, Phase.innerM_single, Phase.innerM_zero_right,
+      simp only [zero_M, Phase.innerM_single, Phase.innerM_zero_right,
         Phase.innerΓ_zero_right, mul_zero, add_zero, sub_zero, Pi.sub_apply] at this
       rcases mul_eq_zero.mp this with h0 | h0
       · exact absurd h0 (T.neg.V_pos K).ne'
       · exact sub_eq_zero.mp h0
     · funext K
       have := hres ⟨0, ⟨Pi.single K 1, 0⟩⟩ (by simp [InX])
-      simp only [zero_ω, zero_γ, Phase.innerM_single, Phase.innerM_zero_right,
+      simp only [zero_M, zero_Γ, Phase.innerM_single, Phase.innerM_zero_right,
         Phase.innerΓ_zero_right, zero_add, sub_zero, Pi.sub_apply] at this
       have hl : (1 / T.lam) ≠ 0 := by have := T.lam_pos; positivity
       rcases mul_eq_zero.mp this with h0 | h0
