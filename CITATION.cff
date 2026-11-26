@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "cutcell-symmetry-lean: Lean 4 formalization of the discrete results"
+abstract: "Lean 4 formalization of the discrete results of the article Symmetry and Positive Definiteness of a Two-Fluid Finite-Volume Method Based on Geometric Moments."
+authors:
+  - family-names: Libat
+    given-names: Louis
+    affiliation: "Univ Gustave Eiffel, Univ Paris Est Creteil, CNRS, UMR 8208, MSME"
+version: 1.0.0
+date-released: 2026-11-26
+license: Apache-2.0
+repository-code: "https://github.com/Fastaxx/cutcell-symmetry-lean"
+keywords:
+  - lean4
+  - mathlib
+  - finite-volume
+  - cut-cell
